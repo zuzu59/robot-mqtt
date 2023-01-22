@@ -1,10 +1,16 @@
 # python3.6
-# Petit programme en python pour envoyer seulement la commande START 
-# puis après quelques secondes la commande STOP sur le robot
-# zf230122.1412
+
+ATTENTION n'est pas du tout terminé !
+
+# Petit programme en python pour faire une petite démo avec le robot.
+# Il avance au maximum contre un mur, recule un poil, tourne et repart au maximum.
+# Ainsi il devrait tout balayer la zone
+# zf230122.1413
 # Sources: 
 # https://www.emqx.com/en/blog/how-to-use-mqtt-in-python
 # http://www.steves-internet-guide.com/into-mqtt-python-client/
+# http://www.steves-internet-guide.com/send-json-data-mqtt-python/
+
 # Installation: pip3 install paho-mqtt
 # Utilisation python3 send_start.py
 
@@ -39,6 +45,7 @@ def connect_mqtt():
 
 
 def publish(client):
+    # envoie la durée d'allumage du moteur
     topic = robot_name + "/switch/" + robot_name + "_motor_start/set"
     time.sleep(1)
     result = client.publish(topic, "ON")

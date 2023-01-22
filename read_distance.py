@@ -1,7 +1,10 @@
 # python3.6
 # Petit programme en python pour lire la distance du capteur de distance du robot
 # zf230120.1813
-# Sources: https://www.emqx.com/en/blog/how-to-use-mqtt-in-python
+# Sources: 
+# https://www.emqx.com/en/blog/how-to-use-mqtt-in-python
+# http://www.steves-internet-guide.com/into-mqtt-python-client/
+
 # Installation: pip3 install paho-mqtt
 # Utilisation python3 toto.py
 
