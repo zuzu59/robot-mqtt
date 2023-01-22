@@ -1,6 +1,7 @@
 # python3.6
-# Petit programme en python pour envoyer seulement la commande START sur le robot_0
-# zf230122.1348
+# Petit programme en python pour envoyer seulement la commande START 
+# puis après quelques secondes la commande STOP sur le robot
+# zf230122.1359
 # Sources: https://www.emqx.com/en/blog/how-to-use-mqtt-in-python
 # Installation: pip3 install paho-mqtt
 # Utilisation python3 send_start.py
@@ -18,6 +19,7 @@ port = 1883
 client_id = f'python-mqtt-{random.randint(0, 100)}'
 username = 'toto'
 password = 'tutu'
+robot_name = 'robot_0'
 
 
 
@@ -35,7 +37,7 @@ def connect_mqtt():
 
 
 def publish(client):
-    topic = "robot_0/switch/robot_0_motor_start/set"
+    topic = robot_name + "/switch/" + robot_name + "_motor_start/set"
     time.sleep(1)
     result = client.publish(topic, "ON")
     status = result[0]
@@ -44,7 +46,7 @@ def publish(client):
     else:
         print(f"Failed to send message to topic {topic}")
 
-    topic = "robot_0/switch/robot_0_motor_stop/set"
+    topic = robot_name + "/switch/" + robot_name + "_motor_stop/set"
     time.sleep(3)
     result = client.publish(topic, "ON")
     status = result[0]
