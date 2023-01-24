@@ -5,7 +5,7 @@
 # Petit programme en python pour faire une petite démo avec le robot.
 # Il avance au maximum contre un mur, recule un poil, tourne et repart au maximum.
 # Ainsi il devrait tout balayer la zone
-# zf230124.2211
+# zf230124.2329
 # Sources: 
 # https://www.emqx.com/en/blog/how-to-use-mqtt-in-python
 # http://www.steves-internet-guide.com/into-mqtt-python-client/
@@ -34,11 +34,13 @@ topic_distance = robot_name + "/sensor/" + robot_name + "_distance/state"
 topic_start = robot_name + "/switch/" + robot_name + "_motor_start/set"
 topic_stop = robot_name + "/switch/" + robot_name + "_motor_stop/set"
 topic_go = robot_name + "/switch/" + robot_name + "_motor_go/set"
-topic_forward = robot_name + "/switch/" + robot_name + "_motor_forward/set"
-topic_backward = robot_name + "/switch/" + robot_name + "_motor_backward/set"
-topic_left = robot_name + "/switch/" + robot_name + "_motor_left/set"
-topic_right = robot_name + "/switch/" + robot_name + "_motor_right/set"
+topic_forward = robot_name + "/switch/" + robot_name + "_motor_direction_forward/set"
+topic_backward = robot_name + "/switch/" + robot_name + "_motor_direction_backward/set"
+topic_left = robot_name + "/switch/" + robot_name + "_motor_direction_left/set"
+topic_right = robot_name + "/switch/" + robot_name + "_motor_direction_right/set"
 topic_motor_time = robot_name + "/number/" + robot_name + "_motor_time/set"
+topic_preburn = robot_name + "/number/" + robot_name + "_motor_preburn/set"
+topic_preburn_time = robot_name + "/number/" + robot_name + "_motor_preburn_time/set"
 
 
 
@@ -106,14 +108,17 @@ def publish_avance_droit(client):
 
 def publish_recule_tourne_left(client):
     # recule 1 seconde puis tourne 1 seconde
+    publish_consign(client, topic_preburn, 100)
+    publish_consign(client, topic_preburn_time, 0.7)
+    time.sleep(2)
     publish_command(client,topic_backward)
-    # publish_consign(client, topic_motor_time, 1)
-    # publish_command(client,topic_go)
-    # time.sleep(1)
-    # publish_command(client,topic_left)
-    # publish_consign(client, topic_motor_time, 1)
-    # publish_command(client,topic_go)
-    # time.sleep(1)
+    publish_consign(client, topic_motor_time, 0.7)
+    publish_command(client,topic_go)
+    time.sleep(2)
+    publish_command(client,topic_left)
+    publish_consign(client, topic_motor_time, 0.7)
+    publish_command(client,topic_go)
+    time.sleep(2)
 
 
 
@@ -126,8 +131,7 @@ def go_demo(client):
     # publish_avance_droit(client)
     # time.sleep(3)
     # publish_stop(client)
-#    publish_recule_tourne_left(client)
-    publish_command(client,topic_backward)
+    publish_recule_tourne_left(client)
 
 
 
@@ -138,8 +142,7 @@ def run():
     # client.loop_start()
     time.sleep(2)
 #    publish_consign(client, topic_motor_time, 1.25)
-#    go_demo(client)
-    publish_command(client,topic_backward)
+    go_demo(client)
 
 
 if __name__ == '__main__':
