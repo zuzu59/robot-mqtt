@@ -5,7 +5,7 @@
 # Petit programme en python pour faire une petite démo avec le robot.
 # Il avance au maximum contre un mur, recule un poil, tourne et repart au maximum.
 # Ainsi il devrait tout balayer la zone
-# zf230124.2129
+# zf230124.2211
 # Sources: 
 # https://www.emqx.com/en/blog/how-to-use-mqtt-in-python
 # http://www.steves-internet-guide.com/into-mqtt-python-client/
@@ -16,6 +16,8 @@
 
 import random
 import time
+import json
+
 
 from paho.mqtt import client as mqtt_client
 
@@ -31,10 +33,12 @@ robot_name = 'robot_2'
 topic_distance = robot_name + "/sensor/" + robot_name + "_distance/state"
 topic_start = robot_name + "/switch/" + robot_name + "_motor_start/set"
 topic_stop = robot_name + "/switch/" + robot_name + "_motor_stop/set"
+topic_go = robot_name + "/switch/" + robot_name + "_motor_go/set"
 topic_forward = robot_name + "/switch/" + robot_name + "_motor_forward/set"
 topic_backward = robot_name + "/switch/" + robot_name + "_motor_backward/set"
 topic_left = robot_name + "/switch/" + robot_name + "_motor_left/set"
 topic_right = robot_name + "/switch/" + robot_name + "_motor_right/set"
+topic_motor_time = robot_name + "/number/" + robot_name + "_motor_time/set"
 
 
 
@@ -63,39 +67,79 @@ def subscribe(client: mqtt_client):
     client.on_message = on_message
 
 
-def publish_commande(client, topic_commande):
+
+
+
+def publish_command(client, topic_command):
     # envoie la commande ON au topic
-    topic = topic_commande
-    result = client.publish(topic, "ON")
+    result = client.publish(topic_command, "ON")
     status = result[0]
     if status == 0:
-        print(f"Send ON to topic `{topic}`")
+        print(f"Send ON to topic `{topic_command}`")
     else:
-        print(f"Failed to send message to topic {topic}")
+        print(f"Failed to send message to topic {topic_command}")
+
+
+
+
+
+
+
+def publish_consign(client, topic_number, topic_value):
+    # envoie une valeur au topic
+    MQTT_MSG = '{"value":' + str(topic_value) + '}'
+    result = client.publish(topic_number, MQTT_MSG)
+    status = result[0]
+    if status == 0:
+        print(f"Send `{topic_value}` to topic `{topic_number}`")
+    else:
+        print(f"Failed to send message to topic {topic_number}")
 
 def publish_stop(client):
     # arrête le robot
-    publish_commande(client,topic_stop)
+    publish_command(client,topic_stop)
 
 def publish_avance_droit(client):
     # fait avancer le robot droit devant
-    publish_commande(client,topic_forward)
-    publish_commande(client,topic_start)
+    publish_command(client,topic_forward)
+    publish_command(client,topic_start)
+
+def publish_recule_tourne_left(client):
+    # recule 1 seconde puis tourne 1 seconde
+    publish_command(client,topic_backward)
+    # publish_consign(client, topic_motor_time, 1)
+    # publish_command(client,topic_go)
+    # time.sleep(1)
+    # publish_command(client,topic_left)
+    # publish_consign(client, topic_motor_time, 1)
+    # publish_command(client,topic_go)
+    # time.sleep(1)
+
+
+
+
+
+
+
     
 def go_demo(client):
-    publish_avance_droit(client)
-    time.sleep(3)
-    publish_stop(client)
-    
+    # publish_avance_droit(client)
+    # time.sleep(3)
+    # publish_stop(client)
+#    publish_recule_tourne_left(client)
+    publish_command(client,topic_backward)
+
 
 
 def run():
     print("Hello zuzu")
     client = connect_mqtt()
-    subscribe(client)
-    client.loop_start()
-    time.sleep(1)
-    go_demo(client)
+    # subscribe(client)
+    # client.loop_start()
+    time.sleep(2)
+#    publish_consign(client, topic_motor_time, 1.25)
+#    go_demo(client)
+    publish_command(client,topic_backward)
 
 
 if __name__ == '__main__':
