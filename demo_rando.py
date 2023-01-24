@@ -41,7 +41,7 @@ topic_right = robot_name + "/switch/" + robot_name + "_motor_direction_right/set
 topic_motor_time = robot_name + "/number/" + robot_name + "_motor_time/set"
 topic_preburn = robot_name + "/number/" + robot_name + "_motor_preburn/set"
 topic_preburn_time = robot_name + "/number/" + robot_name + "_motor_preburn_time/set"
-
+robot_stoped = 0
 
 
 
@@ -64,31 +64,24 @@ def subscribe(client: mqtt_client):
         if msg.payload.decode() != "nan" :
             if float(msg.payload.decode()) < 0.25 :
                 print("Attention c'est plus petit que 25 cm")
+                # client.loop_stop()
+                publish_recule_tourne_left(client)
             
     client.subscribe(topic_distance)
     client.on_message = on_message
 
-
-
-
-
+# envoie la commande ON au topic
 def publish_command(client, topic_command):
-    # envoie la commande ON au topic
     result = client.publish(topic_command, "ON")
     status = result[0]
     if status == 0:
         print(f"Send ON to topic `{topic_command}`")
     else:
         print(f"Failed to send message to topic {topic_command}")
+    time.sleep(0.5)
 
-
-
-
-
-
-
+# envoie une valeur au topic
 def publish_consign(client, topic_number, topic_value):
-    # envoie une valeur au topic
     MQTT_MSG = '{"value":' + str(topic_value) + '}'
     result = client.publish(topic_number, MQTT_MSG)
     status = result[0]
@@ -96,54 +89,58 @@ def publish_consign(client, topic_number, topic_value):
         print(f"Send `{topic_value}` to topic `{topic_number}`")
     else:
         print(f"Failed to send message to topic {topic_number}")
+    time.sleep(0.5)
 
+# arrête le robot
 def publish_stop(client):
-    # arrête le robot
     publish_command(client,topic_stop)
 
+# fait avancer le robot droit devant
 def publish_avance_droit(client):
-    # fait avancer le robot droit devant
     publish_command(client,topic_forward)
     publish_command(client,topic_start)
 
+# recule 1 seconde puis tourne 1 seconde
 def publish_recule_tourne_left(client):
-    # recule 1 seconde puis tourne 1 seconde
-    publish_consign(client, topic_preburn, 100)
-    publish_consign(client, topic_preburn_time, 0.7)
-    time.sleep(2)
-    publish_command(client,topic_backward)
-    publish_consign(client, topic_motor_time, 0.7)
-    publish_command(client,topic_go)
-    time.sleep(2)
-    publish_command(client,topic_left)
-    publish_consign(client, topic_motor_time, 0.7)
-    publish_command(client,topic_go)
-    time.sleep(2)
-
-
-
-
+    global robot_stoped
+    print("robot_stoped: " + str(robot_stoped))
+    if robot_stoped == 0 :
+        robot_stoped = 1
+        print("robot_stoped: " + str(robot_stoped))
+        publish_consign(client, topic_preburn, 100)
+        publish_consign(client, topic_preburn_time, 1)
+        time.sleep(1)
+        publish_command(client,topic_backward)
+        publish_consign(client, topic_motor_time, 2)
+        publish_command(client,topic_go)
+        time.sleep(4)
+        publish_command(client,topic_left)
+        publish_consign(client, topic_motor_time, 2)
+        publish_command(client,topic_go)
+        time.sleep(4)
+        # robot_stoped = 0
+        # publish_avance_droit(client)
 
 
 
     
 def go_demo(client):
-    # publish_avance_droit(client)
-    # time.sleep(3)
-    # publish_stop(client)
-    publish_recule_tourne_left(client)
+    # publish_recule_tourne_left(client)
+    publish_avance_droit(client)
+    time.sleep(23)
+    # # publish_stop(client)
 
 
 
 def run():
     print("Hello zuzu")
     client = connect_mqtt()
-    # subscribe(client)
-    # client.loop_start()
-    time.sleep(2)
+    subscribe(client)
+    client.loop_start()
+    time.sleep(1)
 #    publish_consign(client, topic_motor_time, 1.25)
     go_demo(client)
-
+    
 
 if __name__ == '__main__':
     run()
