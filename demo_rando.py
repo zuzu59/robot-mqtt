@@ -5,7 +5,7 @@
 # Petit programme en python pour faire une petite démo avec le robot.
 # Il avance au maximum contre un mur, recule un poil, tourne et repart au maximum.
 # Ainsi il devrait tout balayer la zone
-# zf230124.2329
+# zf230125.2357
 # Sources: 
 # https://www.emqx.com/en/blog/how-to-use-mqtt-in-python
 # http://www.steves-internet-guide.com/into-mqtt-python-client/
@@ -41,7 +41,7 @@ topic_right = robot_name + "/switch/" + robot_name + "_motor_direction_right/set
 topic_motor_time = robot_name + "/number/" + robot_name + "_motor_time/set"
 topic_preburn = robot_name + "/number/" + robot_name + "_motor_preburn/set"
 topic_preburn_time = robot_name + "/number/" + robot_name + "_motor_preburn_time/set"
-robot_stoped = 0
+robot_stopped = 0
 
 
 
@@ -62,17 +62,21 @@ def subscribe(client: mqtt_client):
     def on_message(client, userdata, msg):
         print(f"Received `{msg.payload.decode()}` from `{msg.topic}` topic")
         if msg.payload.decode() != "nan" :
-            if float(msg.payload.decode()) < 0.25 :
-                print("Attention c'est plus petit que 25 cm")
+            if float(msg.payload.decode()) < 0.35 :
+                print("Attention c'est plus petit que xx cm")
                 # client.loop_stop()
-                publish_recule_tourne_left(client)
+                global robot_stopped
+                print("robot_stopped: " + str(robot_stopped))
+                robot_stopped = 1
+                print("robot_stopped: " + str(robot_stopped))
+
             
     client.subscribe(topic_distance)
     client.on_message = on_message
 
 # envoie la commande ON au topic
 def publish_command(client, topic_command):
-    result = client.publish(topic_command, "ON")
+    result = client.publish(topic_command, "ON", qos=1)
     status = result[0]
     if status == 0:
         print(f"Send ON to topic `{topic_command}`")
@@ -81,7 +85,7 @@ def publish_command(client, topic_command):
     time.sleep(0.5)
 
 # envoie une valeur au topic
-def publish_consign(client, topic_number, topic_value):
+def publish_consign(client, topic_number, topic_value, qos=1):
     MQTT_MSG = '{"value":' + str(topic_value) + '}'
     result = client.publish(topic_number, MQTT_MSG)
     status = result[0]
@@ -102,31 +106,37 @@ def publish_avance_droit(client):
 
 # recule 1 seconde puis tourne 1 seconde
 def publish_recule_tourne_left(client):
-    global robot_stoped
-    print("robot_stoped: " + str(robot_stoped))
-    if robot_stoped == 0 :
-        robot_stoped = 1
-        print("robot_stoped: " + str(robot_stoped))
-        publish_consign(client, topic_preburn, 100)
-        publish_consign(client, topic_preburn_time, 1)
-        time.sleep(1)
-        publish_command(client,topic_backward)
-        publish_consign(client, topic_motor_time, 2)
-        publish_command(client,topic_go)
-        time.sleep(4)
-        publish_command(client,topic_left)
-        publish_consign(client, topic_motor_time, 2)
-        publish_command(client,topic_go)
-        time.sleep(4)
-        # robot_stoped = 0
-        # publish_avance_droit(client)
+    print("robot_stopped: " + str(robot_stopped))
+    publish_consign(client, topic_preburn, 90)
+    publish_consign(client, topic_preburn_time, 0.7)
+    time.sleep(0.1)
+    publish_command(client,topic_backward)
+    publish_consign(client, topic_motor_time, 0.7)
+    publish_command(client,topic_go)
+    time.sleep(1.5)
+    publish_command(client,topic_left)
+    publish_consign(client, topic_motor_time, 0.7)
+    publish_command(client,topic_go)
+    time.sleep(1.5)
 
 
 
     
+# stratégie tondeuse à gazon
 def go_demo(client):
-    # publish_recule_tourne_left(client)
+    global robot_stopped
     publish_avance_droit(client)
+    while True:
+        if robot_stopped == 1:
+            publish_stop(client)
+            publish_recule_tourne_left(client)
+            publish_avance_droit(client)
+            robot_stopped = 0
+
+
+
+
+
     time.sleep(23)
     # # publish_stop(client)
 
